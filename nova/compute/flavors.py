@@ -71,7 +71,7 @@ def _int_or_none(val):
 
 system_metadata_flavor_props = {
     'id': int,
-    'name': str,
+    'name': unicode,
     'memory_mb': int,
     'vcpus': int,
     'root_gb': int,
