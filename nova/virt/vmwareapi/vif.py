@@ -141,9 +141,18 @@ def get_neutron_network(session, network_name, cluster, vif):
 
 def get_network_ref(session, cluster, vif, is_neutron):
     if is_neutron:
-        network_name = (vif['network']['bridge'] or
+        network_type = vif['network'].get_meta('network_type', False)
+        if network_type:
+            vlan_num = vif['network'].get_meta('vlan')
+            bridge = 'br-' + str(vlan_num)
+            vif['network']['bridge'] = bridge
+            network_name = bridge
+            network_ref = ensure_vlan_bridge(session, vif, cluster=cluster,
+                                         create_vlan=True)
+        else:
+            network_name = (vif['network']['bridge'] or
                         CONF.vmware.integration_bridge)
-        network_ref = get_neutron_network(session, network_name, cluster, vif)
+            network_ref = get_neutron_network(session, network_name, cluster, vif)
     else:
         create_vlan = vif['network'].get_meta('should_create_vlan', False)
         network_ref = ensure_vlan_bridge(session, vif, cluster=cluster,

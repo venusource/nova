@@ -1039,8 +1039,12 @@ class API(base.Base):
 
     def _nw_info_build_network(self, port, networks, subnets):
         network_name = None
+        vlan_id = None
+        network_type = None
         for net in networks:
             if port['network_id'] == net['id']:
+                vlan_id = net.get('provider:segmentation_id')
+                network_type = net.get('provider:network_type')
                 network_name = net['name']
                 tenant_id = net['tenant_id']
                 break
@@ -1076,6 +1080,8 @@ class API(base.Base):
             tenant_id=tenant_id
             )
         network['subnets'] = subnets
+        network['vlan_id'] = vlan_id
+        network['network_type'] = network_type
         port_profile = port.get('binding:profile')
         if port_profile:
             physical_network = port_profile.get('physical_network')

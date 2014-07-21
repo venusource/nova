@@ -273,6 +273,8 @@ class VMwareVMOps(object):
                                                         self._cluster,
                                                         vif,
                                                         self._is_neutron)
+                if not network_name == network_ref['name']:
+                    network_name = network_ref['name']
                 vif_infos.append({'network_name': network_name,
                                   'mac_address': mac_address,
                                   'network_ref': network_ref,
