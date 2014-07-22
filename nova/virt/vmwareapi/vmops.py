@@ -192,6 +192,8 @@ class VMwareVMOps(object):
         4. Attach the disk to the VM by reconfiguring the same.
         5. Power on the VM.
         """
+        properties = image_meta['properties']
+        template_name = properties.get('template_name')
         ebs_root = False
         if block_device_info:
             LOG.debug(_("Block device information present: %s")
@@ -430,8 +432,10 @@ class VMwareVMOps(object):
                 CONF.vmware.use_linked_clone
             )
             upload_name = instance['image_ref']
-            upload_folder = '%s/%s' % (self._base_folder, upload_name)
-
+            if template_name == None:
+                upload_folder = '%s/%s' % (self._base_folder, upload_name)
+            else:
+                upload_folder = '%s/%s' % (template_name, template_name)
             # The vmdk meta-data file
             uploaded_file_name = "%s/%s.%s" % (upload_folder, upload_name,
                                                file_type)
@@ -498,24 +502,25 @@ class VMwareVMOps(object):
                                       ds_util.build_datastore_path(
                                           data_store_name, upload_folder),
                                       dc_info.ref)
-                        _create_virtual_disk(upload_path,
-                                             vmdk_file_size_in_kb)
-                        self._delete_datastore_file(instance,
-                                                    flat_uploaded_vmdk_path,
-                                                    dc_info.ref)
+                        if template_name == None:
+                            _create_virtual_disk(upload_path,
+                                                 vmdk_file_size_in_kb)
+                            self._delete_datastore_file(instance,
+                                                        flat_uploaded_vmdk_path,
+                                                        dc_info.ref)
                         upload_file_name = flat_uploaded_vmdk_name
                     else:
                         upload_file_name = sparse_uploaded_vmdk_name
-
-                _fetch_image_on_datastore(upload_file_name)
+                if template_name == None:
+                    _fetch_image_on_datastore(upload_file_name)
 
                 if not is_iso and disk_type == "sparse":
                     # Copy the sparse virtual disk to a thin virtual disk.
                     disk_type = "thin"
-                    _copy_virtual_disk(sparse_uploaded_vmdk_path, upload_path)
-                    self._delete_datastore_file(instance,
-                                                sparse_uploaded_vmdk_path,
-                                                dc_info.ref)
+##                    _copy_virtual_disk(sparse_uploaded_vmdk_path, upload_path)
+##                    self._delete_datastore_file(instance,
+##                                                sparse_uploaded_vmdk_path,
+##                                                dc_info.ref)
                 base_folder = '%s/%s' % (self._base_folder, upload_name)
                 dest_folder = ds_util.build_datastore_path(data_store_name,
                                                            base_folder)
@@ -546,7 +551,8 @@ class VMwareVMOps(object):
                     dest_vmdk_path = self._get_vmdk_path(data_store_name,
                             instance['uuid'], instance_name)
                     # Create the blank virtual disk for the VM
-                    _create_virtual_disk(dest_vmdk_path, root_gb_in_kb)
+                    if template_name == None:
+                        _create_virtual_disk(dest_vmdk_path, root_gb_in_kb)
                     root_vmdk_path = dest_vmdk_path
                 else:
                     root_vmdk_path = None
@@ -558,7 +564,8 @@ class VMwareVMOps(object):
                     # linked clone it is references from the cache directory
                     dest_vmdk_path = self._get_vmdk_path(data_store_name,
                             instance_name, instance_name)
-                    _copy_virtual_disk(uploaded_file_path, dest_vmdk_path)
+                    if template_name == None:
+                        _copy_virtual_disk(uploaded_file_path, dest_vmdk_path)
 
                     root_vmdk_path = dest_vmdk_path
                     if root_gb_in_kb > vmdk_file_size_in_kb:
