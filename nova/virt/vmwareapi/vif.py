@@ -17,6 +17,7 @@
 
 from oslo.config import cfg
 
+import time
 from nova import exception
 from nova.openstack.common.gettextutils import _
 from nova.openstack.common import log as logging
@@ -52,7 +53,7 @@ def _get_associated_vswitch_for_interface(session, interface, cluster=None):
 
 def ensure_vlan_bridge(session, vif, cluster=None, create_vlan=True):
     """Create a vlan and bridge unless they already exist."""
-    vlan_num = vif['network'].get_meta('vlan')
+    vlan_num = vif['network'].get_meta('vlan_id')
     bridge = vif['network']['bridge']
     vlan_interface = CONF.vmware.vlan_interface
 
@@ -71,6 +72,7 @@ def ensure_vlan_bridge(session, vif, cluster=None, create_vlan=True):
                                        vswitch_associated,
                                        vlan_num if create_vlan else 0,
                                        cluster)
+        time.sleep(10)
         network_ref = network_util.get_network_with_the_name(session,
                                                              bridge,
                                                              cluster)
@@ -143,7 +145,7 @@ def get_network_ref(session, cluster, vif, is_neutron):
     if is_neutron:
         network_type = vif['network'].get_meta('network_type', False)
         if network_type:
-            vlan_num = vif['network'].get_meta('vlan')
+            vlan_num = vif['network'].get_meta('vlan_id')
             bridge = 'br-' + str(vlan_num)
             vif['network']['bridge'] = bridge
             network_name = bridge
