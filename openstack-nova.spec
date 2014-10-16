@@ -314,6 +314,9 @@ VNC traffic over browser websockets connections.
 Summary:          Nova Python libraries
 Group:            Applications/System
 
+# Require auditlog
+Requires:         auditlog
+
 Requires:         openssl
 # Require openssh for ssh-keygen
 Requires:         openssh
@@ -396,7 +399,7 @@ rm -rf {test-,}requirements.txt tools/{pip,test}-requires
 %build
 %{__python} setup.py build
 
-#install -p -D -m 640 etc/nova/others/nova.conf.sample etc/nova/nova.conf.sample
+install -p -D -m 640 etc/nova/start/nova.conf.sample etc/nova/nova.conf.sample
 
 # Avoid http://bugzilla.redhat.com/1059815. Remove when that is closed
 sed -i 's|group/name|group;name|; s|\[DEFAULT\]/|DEFAULT;|' etc/nova/nova.conf.sample
