@@ -2474,6 +2474,9 @@
 # Deprecated group/name - [sql]/connection
 #connection=<None>
 
+# The auditlog connection used mongo
+#auditlog_connection=mongodb://localhost:27017/auditlog
+
 # The SQL mode to be used for MySQL sessions (default is
 # empty, meaning do not override any server-side SQL mode
 # setting) (string value)
