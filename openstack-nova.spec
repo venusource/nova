@@ -14,6 +14,17 @@ License:          ASL 2.0
 URL:              http://openstack.org/projects/compute/
 Source0:          nova-%{version}.tar.gz
 
+#
+# patches_base=2014.1.1
+#
+Patch0001: 0001-Ensure-we-don-t-access-the-net-when-building-docs.patch
+Patch0002: 0002-remove-runtime-dep-on-python-pbr.patch
+Patch0003: 0003-Revert-Replace-oslo.sphinx-with-oslosphinx.patch
+Patch0004: 0004-notify-calling-process-we-are-ready-to-serve.patch
+Patch0005: 0005-Move-notification-point-to-a-better-place.patch
+Patch0006: 0006-Set-the-volume-access-mode-during-volume-attach.patch
+Patch0007: 0007-Avoid-possible-timing-attack-in-metadata-api.patch
+
 # This is EPEL specific and not upstream
 
 BuildArch:        noarch
@@ -328,7 +339,6 @@ Requires:         python-qpid
 Requires:         python-kombu
 Requires:         python-amqplib
 
-Requires:         python-pbr
 Requires:         python-eventlet
 Requires:         python-greenlet
 Requires:         python-iso8601
@@ -377,7 +387,8 @@ BuildRequires:    graphviz
 BuildRequires:    python-boto
 BuildRequires:    python-eventlet
 # while not strictly required, quiets the build down when building docs.
-BuildRequires:    python-migrate, python-iso8601
+BuildRequires:    python-migrate
+BuildRequires:	  python-iso8601
 
 %description      doc
 OpenStack Compute (codename Nova) is open source software designed to
@@ -389,6 +400,24 @@ This package contains documentation files for nova.
 
 %prep
 %setup -q -n nova-%{version}
+
+%patch0001 -p1
+%patch0002 -p1
+%patch0003 -p1
+%patch0004 -p1
+%patch0005 -p1
+%patch0006 -p1
+%patch0007 -p1
+
+# Apply EPEL patch
+
+find . \( -name .gitignore -o -name .placeholder \) -delete
+
+find nova -name \*.py -exec sed -i '/\/usr\/bin\/env python/{d;q}' {} +
+
+sed -i '/setuptools_git/d' setup.py
+sed -i s/REDHATNOVAVERSION/%{version}/ nova/version.py
+sed -i s/REDHATNOVARELEASE/%{release}/ nova/version.py
 
 # Remove the requirements file so that pbr hooks don't add it 
 # to distutils requiers_dist config
@@ -428,7 +457,7 @@ export PYTHONPATH="$( pwd ):$PYTHONPATH"
 pushd doc
 
 %if 0%{?with_doc}
-SPHINX_DEBUG=1 sphinx-1.0-build -b html source build/html
+SPHINX_DEBUG=1 sphinx-build -b html source build/html
 # Fix hidden-file-or-dir warnings
 rm -fr build/html/.doctrees build/html/.buildinfo
 %endif
@@ -436,7 +465,7 @@ rm -fr build/html/.doctrees build/html/.buildinfo
 # Create dir link to avoid a sphinx-build exception
 mkdir -p build/man/.doctrees/
 ln -s .  build/man/.doctrees/man
-SPHINX_DEBUG=1 sphinx-1.0-build -b man -c source source/man build/man
+SPHINX_DEBUG=1 sphinx-build -b man -c source source/man build/man
 mkdir -p %{buildroot}%{_mandir}/man1
 install -p -D -m 644 build/man/*.1 %{buildroot}%{_mandir}/man1/
 
