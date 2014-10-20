@@ -1,8 +1,6 @@
 %define name openstack-nova
 %define version 2014.1
-%define unmangled_version 2014.1
-%define unmangled_version 2014.1
-%define release 0.13.rc2.el6
+%define release 1%{dist}
 
 %global with_doc %{!?_without_doc:1}%{?_without_doc:0}
 
@@ -14,7 +12,7 @@ Summary:          OpenStack Compute (nova)
 Group:            Applications/System
 License:          ASL 2.0
 URL:              http://openstack.org/projects/compute/
-Source0:          nova-%{unmangled_version}.tar.gz
+Source0:          nova-%{version}.tar.gz
 
 # This is EPEL specific and not upstream
 
